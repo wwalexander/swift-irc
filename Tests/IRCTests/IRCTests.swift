@@ -47,10 +47,10 @@ import Testing
         "pumpkinseed-ionian.ts.net",
         "iridium.libera.chat",
     ], [
-        "wwalexander",
-        "wwalexander!williamalexander@pumpkinseed-ionian.ts.net",
-        "pumpkinseed-ionian.ts.net",
-        "iridium.libera.chat",
+        Prefix.user("wwalexander"),
+        Prefix.user("wwalexander", user: "williamalexander", host: "pumpkinseed-ionian.ts.net"),
+        Prefix.server(.init(host: "pumpkinseed-ionian.ts.net")),
+        Prefix.server(.init(host: "iridium.libera.chat")),
     ])) func testPrefix(input: String, output: Prefix) throws {
         #expect(try Prefix.parser.parse(input) == output)
         #expect(try Prefix.parser.print(output) == input)
@@ -78,13 +78,11 @@ import Testing
         #expect(try Params.parser.print(output) == input)
     }
     
-    //USER william 0 * :William Alexander\r\n
-    
     @Test(arguments: zip([
         ":iridium.libera.chat NOTICE * :*** Checking Ident",
     ], [
         Message(
-            prefix: "iridium.libera.chat",
+            prefix: .server(.init(host: "iridium.libera.chat")),
             command: "NOTICE",
             params: .init(
                 middle: [
