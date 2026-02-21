@@ -1,5 +1,5 @@
 import Testing
-import IRC
+@testable import IRC
 
 @Suite struct ParsingTests {
     @Test(arguments: zip([
@@ -45,10 +45,12 @@ import IRC
         "wwalexander",
         "wwalexander!williamalexander@pumpkinseed-ionian.ts.net",
         "pumpkinseed-ionian.ts.net",
+        "iridium.libera.chat",
     ], [
-        Prefix.user("wwalexander"),
-        Prefix.user("wwalexander", user: "williamalexander", host: "pumpkinseed-ionian.ts.net"),
-        Prefix.server(.init(host: "pumpkinseed-ionian.ts.net")),
+        "wwalexander",
+        "wwalexander!williamalexander@pumpkinseed-ionian.ts.net",
+        "pumpkinseed-ionian.ts.net",
+        "iridium.libera.chat",
     ])) func testPrefix(input: String, output: Prefix) throws {
         #expect(try Prefix.parser.parse(input) == output)
         #expect(try Prefix.parser.print(output) == input)
@@ -79,17 +81,16 @@ import IRC
     //USER william 0 * :William Alexander\r\n
     
     @Test(arguments: zip([
-        "USER william 0 * :William Alexander\r\n",
+        ":iridium.libera.chat NOTICE * :*** Checking Ident",
     ], [
         Message(
-            command: "USER",
+            prefix: "iridium.libera.chat",
+            command: "NOTICE",
             params: .init(
                 middle: [
-                    "william",
-                    "0",
                     "*"
                 ],
-                trailing: "William Alexander"
+                trailing: "*** Checking Ident"
             )
         ),
     ])) func testMessage(input: String, output: Message) throws {

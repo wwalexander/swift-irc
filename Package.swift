@@ -19,8 +19,12 @@ let package = Package(
             from: "0.14.1"
         ),
         .package(
-            url: "https://github.com/pointfreeco/swift-nonempty",
-            from: "0.5.0"
+            url: "https://github.com/apple/swift-nio-transport-services",
+            from: "1.26.0"
+        ),
+        .package(
+            url: "https://github.com/apple/swift-nio-extras",
+            from: "1.32.1"
         ),
     ],
     targets: [
@@ -32,8 +36,12 @@ let package = Package(
                     package: "swift-parsing"
                 ),
                 .product(
-                    name: "NonEmpty",
-                    package: "swift-nonempty"
+                    name: "NIOTransportServices",
+                    package: "swift-nio-transport-services"
+                ),
+                .product(
+                    name: "NIOExtras",
+                    package: "swift-nio-extras"
                 ),
             ]
         ),

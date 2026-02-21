@@ -34,7 +34,6 @@ extension Message: ParsePrintable {
             }
             Command.parser
             Params.parser
-            "\r\n"
         }
     }
 }
