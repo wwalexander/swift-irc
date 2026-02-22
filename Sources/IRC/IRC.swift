@@ -13,6 +13,7 @@
  The mapping between characters in tag values and their representation in <escaped value> is defined as follows:
 
  Character       Sequence in <escaped value>
+ outpu.command.rawValue 
  ; (semicolon)   \: (backslash and colon)
  SPACE           \s
  \               \\

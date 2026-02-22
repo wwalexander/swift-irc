@@ -1,6 +1,14 @@
 import Testing
 @testable import IRC
 
+@Test func example() async throws {
+    let client = Client(host: "irc.libera.chat", port: 6697)
+    
+    for try await message in client.messages {
+        print(message)
+    }
+}
+
 @Suite struct ParsingTests {
     @Test(arguments: zip([
         "example.com"
