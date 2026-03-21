@@ -5,23 +5,57 @@ import PackageDescription
 let package = Package(
     name: "swift-irc",
     platforms: [
-        .macOS(.v26)
+        .macOS(.v26),
+        .macCatalyst(.v26),
+        .iOS(.v26),
+        .tvOS(.v26),
+        .watchOS(.v26),
+        .visionOS(.v26),
     ],
     products: [
         .library(
             name: "IRC",
             targets: ["IRC"]
         ),
+        .library(
+            name: "IRCFormatting",
+            targets: ["IRCFormatting"]
+        ),
     ],
     dependencies: [
         .package(
+            url: "https://github.com/apple/swift-async-algorithms.git",
+            from: "1.1.2"
+        ),
+        .package(
             url: "https://github.com/pointfreeco/swift-parsing",
             from: "0.14.1"
+        ),
+        .package(
+            url: "https://github.com/pointfreeco/swift-nonempty",
+            from: "0.5.0"
         ),
     ],
     targets: [
         .target(
             name: "IRC",
+            dependencies: [
+                .product(
+                    name: "AsyncAlgorithms",
+                    package: "swift-async-algorithms"
+                ),
+                .product(
+                    name: "Parsing",
+                    package: "swift-parsing"
+                ),
+                .product(
+                    name: "NonEmpty",
+                    package: "swift-nonempty"
+                ),
+            ]
+        ),
+        .target(
+            name: "IRCFormatting",
             dependencies: [
                 .product(
                     name: "Parsing",
@@ -32,6 +66,10 @@ let package = Package(
         .testTarget(
             name: "IRCTests",
             dependencies: ["IRC"]
+        ),
+        .testTarget(
+            name: "IRCFormattingTests",
+            dependencies: ["IRCFormatting"]
         ),
     ]
 )

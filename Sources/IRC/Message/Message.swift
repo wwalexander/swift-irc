@@ -1,27 +1,25 @@
 import Parsing
 
-public struct Message: Sendable, Equatable {
+public struct Message: Sendable, Equatable, ParsePrintable {
     public var tags: Tags?
-    public var prefix: Prefix?
+    public var source: Source?
     public var command: Command
-    public var params: Params
+    public var parameters: Parameters
     
     public init(
         tags: Tags? = nil,
-        prefix: Prefix? = nil,
-        command: Command,
-        params: Params = .init()
+        source: Source? = nil,
+        _ command: Command,
+        _ parameters: Parameters = .init()
     ) {
         self.tags = tags
-        self.prefix = prefix
+        self.source = source
         self.command = command
-        self.params = params
+        self.parameters = parameters
     }
-}
-
-extension Message: ParsePrintable {
+    
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.memberwise(Self.init(tags:prefix:command:params:))) {
+        Parse(.memberwise(Self.init)) {
             Optionally {
                 "@"
                 Tags.parser
@@ -29,12 +27,16 @@ extension Message: ParsePrintable {
             }
             Optionally {
                 ":"
-                Prefix.parser
+                Source.parser
                 " "
             }
             Command.parser
-            Params.parser
+            Parameters.parser
         }
     }
 }
+
+
+
+
 

@@ -1,22 +1,20 @@
 import Parsing
 
-public struct Key: Sendable, Equatable {
-    public var clientOnly: Bool
+public struct Key: Sendable, Equatable, ParsePrintable {
+    public var isClientOnly: Bool
     public var vendor: Vendor?
     public var name: KeyName
     
     public init(
-        clientOnly: Bool = false,
+        isClientOnly: Bool = false,
         vendor: Vendor? = nil,
-        name: KeyName 
+        _ name: KeyName
     ) {
-        self.clientOnly = clientOnly
+        self.isClientOnly = isClientOnly
         self.vendor = vendor
         self.name = name
     }
-}
-
-extension Key: ParsePrintable {
+    
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init)) {
             "+".map { true }.replaceError(with: false)
@@ -26,5 +24,11 @@ extension Key: ParsePrintable {
             }
             KeyName.parser
         }
+    }
+}
+
+extension Key: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self.init(isClientOnly: false, .init(stringLiteral: value))
     }
 }

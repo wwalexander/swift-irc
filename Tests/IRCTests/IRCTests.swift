@@ -2,105 +2,224 @@ import Testing
 @testable import IRC
 
 @Test func example() async throws {
-    let client = Client(host: "irc.libera.chat", port: 6697)
-    
-    for try await message in client.messages {
-        print(message)
-    }
+    let connection = Connection(host: "irc.libera.chat")
+    try await connection.start()
+    try await connection.register(nickname: "wwalexander", userName: "wwalexander", realName: "William Alexander")
+    try await connection.send(.init(.join, .init("#lobsters")))
+    try await Task.sleep(for: .seconds(10))
 }
+
 
 @Suite struct ParsingTests {
     @Test(arguments: zip([
-        "example.com"
-    ], [
-        "example.com"
-    ])) func testHost(input: String, output: Host) throws {
-        #expect(try Host.parser.parse(input) == output)
-        #expect(try Host.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        "example.com"
-    ], [
-        Vendor(host: "example.com")
-    ])) func testVendor(input: String, output: Vendor) throws {
-        #expect(try Vendor.parser.parse(input) == output)
-        #expect(try Vendor.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        "+example.com/foo"
-    ], [
-        Key(clientOnly: true, vendor: .init(host: "example.com"), name: "foo")
-    ])) func testKey(input: String, output: Key) throws {
-        #expect(try Key.parser.parse(input) == output)
-        #expect(try Key.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        "+example.com/foo=bar"
-    ], [
-        Tag(
-            key: .init(clientOnly: true, vendor: .init(host: "example.com"), name: "foo"),
-            value: "bar"
-        )
-    ])) func testTag(input: String, output: IRC.Tag) throws {
-        #expect(try Tag.parser.parse(input) == output)
-        #expect(try Tag.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        "wwalexander",
-        "wwalexander!williamalexander@pumpkinseed-ionian.ts.net",
-        "pumpkinseed-ionian.ts.net",
-        "iridium.libera.chat",
-    ], [
-        Prefix.user("wwalexander"),
-        Prefix.user("wwalexander", user: "williamalexander", host: "pumpkinseed-ionian.ts.net"),
-        Prefix.server(.init(host: "pumpkinseed-ionian.ts.net")),
-        Prefix.server(.init(host: "iridium.libera.chat")),
-    ])) func testPrefix(input: String, output: Prefix) throws {
-        #expect(try Prefix.parser.parse(input) == output)
-        #expect(try Prefix.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        "NICK",
-        "000",
-    ], [
-        Command.client("NICK"),
-        Command.numeric(000),
-    ])) func testCommand(input: String, output: Command) throws {
-        #expect(try Command.parser.parse(input) == output)
-        #expect(try Command.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        " foo bar :baz",
-        " foo bar",
-    ], [
-        Params(middle: ["foo", "bar"], trailing: "baz"),
-        Params(middle: ["foo", "bar"]),
-    ])) func testParams(input: String, output: Params) throws {
-        #expect(try Params.parser.parse(input) == output)
-        #expect(try Params.parser.print(output) == input)
-    }
-    
-    @Test(arguments: zip([
-        ":iridium.libera.chat NOTICE * :*** Checking Ident",
+        ":irc.example.com CAP LS * :multi-prefix extended-join sasl",
+        "@id=234AB :dan!d@localhost PRIVMSG #chan :Hey what's up!",
+        "CAP REQ :sasl",
+        ":irc.example.com CAP * LIST :",
+        "CAP * LS :multi-prefix sasl",
+        "CAP REQ :sasl message-tags foo",
+        ":dan!d@localhost PRIVMSG #chan :Hey!",
+        ":dan!d@localhost PRIVMSG #chan Hey!",
+        ":dan!d@localhost PRIVMSG #chan ::-)",
+        ":nick!ident@host.com PRIVMSG me :Hello",
+        "@aaa=bbb;ccc;example.com/ddd=eee :nick!ident@host.com PRIVMSG me :Hello",
+        "@example-tag=example-value PRIVMSG #channel :Message",
+        "@+example-client-tag=example-value PRIVMSG #channel :Message",
+        ":nick!user@example.com PRIVMSG #channel :https://example.com/a-news-story",
+        "@+icon=https://example.com/favicon.png :url_bot!bot@example.com PRIVMSG #channel :Example.com: A News Story",
+        "@+example.com/foo=bar :irc.example.com NOTICE #channel :A vendor-prefixed client-only tagged message",
+        #"@+example=raw+:=,escaped\:\s\\ :irc.example.com NOTICE #channel :Message"#,
+        "@+example-client-tag=example-value TAGMSG #channel",
+        "@+example-client-tag=example-value TAGMSG @#channel",
+        "@label=123;+example-client-tag=example-value TAGMSG #channel",
+        "@label=123;msgid=abc;+example-client-tag=example-value :nick!user@example.com TAGMSG #channel",
+        "@msgid=abc;+example-client-tag=example-value :nick!user@example.com TAGMSG #channel",
+        "@+tag1;+tag2;+tag5000 TAGMSG #channel",
+        ":server.example.com 417 nick :Input line was too long",
+        "@unknown-tag TAGMSG #channel",
+        ":nick!user@example.com TAGMSG #channel",
     ], [
         Message(
-            prefix: .server(.init(host: "iridium.libera.chat")),
-            command: "NOTICE",
-            params: .init(
-                middle: [
-                    "*"
-                ],
-                trailing: "*** Checking Ident"
-            )
+            source: .server("irc.example.com"),
+            .cap, .init("LS", "*", trailing: "multi-prefix extended-join sasl")
         ),
-    ])) func testMessage(input: String, output: Message) throws {
-        #expect(try Message.parser.parse(input) == output)
-        #expect(try Message.parser.print(output) == input)
+        Message(
+            tags: ["id": "234AB"],
+            source: .client("dan", user: "d", host: "localhost"),
+            .privMsg, .init("#chan", trailing: "Hey what's up!")
+        ),
+        Message(.cap, .init("REQ", trailing: "sasl")),
+        Message(
+            source: .server("irc.example.com"),
+            .cap, .init("*", "LIST", trailing: "")
+        ),
+        Message(.cap, .init("*", "LS", trailing: "multi-prefix sasl")),
+        Message(.cap, .init("REQ", trailing: "sasl message-tags foo")
+        ),
+        Message(
+            source: .client("dan", user: "d", host: "localhost"),
+            .privMsg, .init("#chan", trailing: "Hey!")
+        ),
+        Message(
+            source: .client("dan", user: "d", host: "localhost"),
+            .privMsg, .init("#chan", "Hey!")
+        ),
+        Message(
+            source: .client("dan", user: "d", host: "localhost"),
+            .privMsg, .init("#chan", trailing: ":-)"),
+        ),
+        Message(
+            source: .client("nick", user: "ident", host: "host.com"),
+            .privMsg, .init("me", trailing: "Hello"),
+        ),
+        Message(
+            tags: [
+                "aaa": "bbb",
+                "ccc": nil,
+                .init(vendor: .init(host: "example.com"), "ddd"): "eee"
+            ],
+            source: .client("nick", user: "ident", host: "host.com"),
+            .privMsg, .init("me", trailing: "Hello"),
+        ),
+        Message(
+            tags: ["example-tag": "example-value"],
+            .privMsg, .init("#channel", trailing: "Message"),
+        ),
+        Message(
+            tags: [.init(isClientOnly: true, "example-client-tag"): "example-value"],
+            .privMsg, .init("#channel", trailing: "Message"),
+        ),
+        Message(
+            source: .client(
+                "nick",
+                user: "user",
+                host: "example.com"
+            ),
+            .privMsg, .init("#channel", trailing: "https://example.com/a-news-story")
+        ),
+        Message(
+            tags: [.init(isClientOnly: true, "icon"): "https://example.com/favicon.png"],
+            source: .client(
+                "url_bot",
+                user: "bot",
+                host: "example.com"
+            ),
+            .privMsg, .init("#channel", trailing: "Example.com: A News Story")
+        ),
+        Message(
+            tags: [.init(isClientOnly: true, vendor: .init(host: "example.com"), "foo"): "bar"],
+            source: .server("irc.example.com"),
+            .notice, .init("#channel", trailing: "A vendor-prefixed client-only tagged message")
+        ),
+        Message(
+            tags: [.init(isClientOnly: true, "example"): #"raw+:=,escaped; \"#],
+            source: .server("irc.example.com"),
+            .notice, .init("#channel", trailing: "Message")
+        ),
+        Message(
+            tags: [.init(isClientOnly: true, "example-client-tag"): "example-value"],
+            .client("TAGMSG"), .init("#channel")
+        ),
+        Message(
+            tags: [.init(isClientOnly: true, "example-client-tag"): "example-value"],
+            .client("TAGMSG"), .init("@#channel")
+        ),
+        Message(
+            tags: [
+                "label": "123",
+                .init(isClientOnly: true, "example-client-tag"): "example-value",
+            ],
+            .client("TAGMSG"), .init("#channel")
+        ),
+        Message(
+            tags: [
+                "label": "123",
+                "msgid": "abc",
+                .init(isClientOnly: true, "example-client-tag"): "example-value",
+            ],
+            source: .client("nick", user: "user", host: "example.com"),
+            .client("TAGMSG"), .init("#channel")
+        ),
+        Message(
+            tags: [
+                "msgid": "abc",
+                .init(isClientOnly: true, "example-client-tag"): "example-value",
+            ],
+            source: .client("nick", user: "user", host: "example.com"),
+            .client("TAGMSG"), .init("#channel")
+        ),
+        Message(
+            tags: [
+                .init(isClientOnly: true, "tag1"): nil,
+                .init(isClientOnly: true, "tag2"): nil,
+                .init(isClientOnly: true, "tag5000"): nil,
+            ],
+            .client("TAGMSG"), .init("#channel")
+        ),
+        Message(
+            source: .server("server.example.com"),
+            Command.Errors.inputTooLong,
+            .init("nick", trailing: "Input line was too long")
+        ),
+        Message(
+            tags: ["unknown-tag"],
+            .client("TAGMSG"), .init("#channel")
+        ),
+        Message(
+            source: .client("nick", user: "user", host: "example.com"),
+            .client("TAGMSG"), .init("#channel")
+        ),
+    ])) func testMessage(input: Substring, output: Message) throws {
+        #expect(try Message(parsing: input) == output)
+        #expect(try output.printed == input)
+    }
+    
+    @Test(arguments: zip([
+        "id=123AB;rose",
+        "url=;netsplit=tur,ty",
+    ], [
+        ["id": "123AB", "rose": nil] as Tags,
+        ["url": "", "netsplit": "tur,ty"] as Tags,
+    ])) func testTags(input: Substring, output: Tags) throws {
+        #expect(try Tags(parsing: input) == output)
+        #expect(try output.printed == input)
+    }
+    
+    @Test(arguments: zip([
+        "foo",
+        "example/bar",
+        "znc.in/server-time",
+        "xn--e1afmkfd.org/foo",
+        "draft/foo",
+        "draft/foo-0.2",
+    ], [
+        "foo" as Key,
+        Key(vendor: .init(host: "example"), "bar"),
+        Key(vendor: .init(host: "znc.in"), "server-time"),
+        Key(vendor: .init(host: "xn--e1afmkfd.org"), "foo"),
+        Key(vendor: .init(host: "draft"), "foo"),
+        Key(vendor: .init(host: "draft"), "foo-0.2"),
+    ])) func testKey(input: Substring, output: Key) throws {
+        #expect(try Key(parsing: input) == output)
+        #expect(try output.printed == input)
+    }
+    
+    @Test(arguments: zip([
+        "draft"
+    ], [
+        Vendor(host: "draft"),
+    ])) func testVendor(input: Substring, output: Vendor) throws {
+        #expect(try Vendor(parsing: input) == output)
+        #expect(try output.printed == input)
+    }
+    
+    @Test(arguments: zip([
+        #"raw+:=,escaped\:\s\\"#
+    ], [
+        #"raw+:=,escaped; \"# as Value
+    ])) func testValue(input: Substring, output: Value) throws {
+        #expect(try Value(parsing: input) == output)
+        #expect(try output.printed == input)
     }
 }
+
