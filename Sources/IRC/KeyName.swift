@@ -1,8 +1,10 @@
 import Parsing
 
-public struct KeyName: Sendable, Equatable, ParsePrintable {
+public struct KeyName: Sendable, Equatable {
     let value: String
-    
+}
+
+extension KeyName: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.string.map(.memberwise(Self.init(value:)))) {
             Prefix(1..., while: \.isKeyName)

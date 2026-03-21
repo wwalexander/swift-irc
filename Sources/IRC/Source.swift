@@ -1,14 +1,15 @@
 import Parsing
 
-public enum Source: Sendable, Equatable, ParsePrintable {
+public enum Source: Sendable, Equatable {
     case server(ServerName)
-    
     case client(
         Nickname,
         user: User? = nil,
         host: Host? = nil
     )
-    
+}
+
+extension Source: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         OneOf {
             Parse(.case(server)) {

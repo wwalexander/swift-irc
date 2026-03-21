@@ -1,6 +1,6 @@
 import Parsing
 
-public struct Message: Sendable, Equatable, ParsePrintable {
+public struct Message: Sendable, Equatable {
     public var tags: Tags?
     public var source: Source?
     public var command: Command
@@ -17,7 +17,9 @@ public struct Message: Sendable, Equatable, ParsePrintable {
         self.command = command
         self.parameters = parameters
     }
-    
+}
+
+extension Message: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init)) {
             Optionally {

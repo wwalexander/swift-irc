@@ -3,8 +3,10 @@ import Parsing
 public enum Command: Sendable, Equatable {
     case client(ClientCommand)
     case numeric(NumericCommand)
-    
-    static var parser: some ParserPrinter<Substring, Self> {
+}
+
+extension Command: ParsePrintable {
+    public static var parser: some ParserPrinter<Substring, Self> {
         OneOf {
             ClientCommand.parser.map(.case(client))
             NumericCommand.parser.map(.case(numeric))
@@ -12,15 +14,23 @@ public enum Command: Sendable, Equatable {
     }
 }
 
-public struct ClientCommand: Sendable, Equatable, ParsePrintable {
+public struct ClientCommand: Sendable {
     let value: String
+}
 
+extension ClientCommand: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.string.map(.memberwise(Self.init(value:)))) {
-            Parsing.Prefix(1...) {
+            Prefix(1...) {
                 $0.isLetter
             }
         }
+    }
+}
+
+extension ClientCommand: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.value.caseInsensitiveCompare(rhs.value) == .orderedSame
     }
 }
 
@@ -32,8 +42,10 @@ extension ClientCommand: ExpressibleByStringInterpolation {
 
 public struct NumericCommand: Sendable, Equatable {
     let value: Int
-    
-    static var parser: some ParserPrinter<Substring, Self> {
+}
+
+extension NumericCommand: ParsePrintable {
+    public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init(value:))) {
             Digits(3)
         }

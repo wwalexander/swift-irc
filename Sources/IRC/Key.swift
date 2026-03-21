@@ -1,6 +1,6 @@
 import Parsing
 
-public struct Key: Sendable, Equatable, ParsePrintable {
+public struct Key: Sendable, Equatable {
     public var isClientOnly: Bool
     public var vendor: Vendor?
     public var name: KeyName
@@ -14,7 +14,9 @@ public struct Key: Sendable, Equatable, ParsePrintable {
         self.vendor = vendor
         self.name = name
     }
-    
+}
+
+extension Key: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init)) {
             "+".map { true }.replaceError(with: false)

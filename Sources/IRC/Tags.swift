@@ -1,13 +1,15 @@
 import NonEmpty
 import Parsing
 
-public struct Tags: Sendable, Equatable, RawRepresentable, ParsePrintable {
+public struct Tags: Sendable, Equatable, RawRepresentable {
     public var rawValue: NonEmpty<[Tag]>
     
     public init(rawValue: NonEmpty<[Tag]>) {
         self.rawValue = rawValue
     }
-    
+}
+
+extension Tags: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init)) {
             Parse(.convert { input in

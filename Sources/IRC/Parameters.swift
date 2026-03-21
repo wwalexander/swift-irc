@@ -1,6 +1,6 @@
 import Parsing
 
-public struct Parameters: Sendable, Equatable, ParsePrintable {
+public struct Parameters: Sendable, Equatable {
     public var middle: [MiddleParameter]
     public var trailing: TrailingParameter?
     
@@ -12,7 +12,9 @@ public struct Parameters: Sendable, Equatable, ParsePrintable {
     public init(_ middle: MiddleParameter..., trailing: TrailingParameter? = nil) {
         self.init(middle: middle, trailing: trailing)
     }
-    
+}
+
+extension Parameters: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init)) {
             Many {
@@ -27,9 +29,11 @@ public struct Parameters: Sendable, Equatable, ParsePrintable {
     }
 }
 
-public struct MiddleParameter: Sendable, Equatable, ParsePrintable {
+public struct MiddleParameter: Sendable, Equatable {
     let value: String
-    
+}
+
+extension MiddleParameter: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.string.map(.memberwise(Self.init(value:)))) {
             Consumed {
@@ -46,9 +50,11 @@ extension MiddleParameter: ExpressibleByStringInterpolation {
     }
 }
 
-public struct TrailingParameter: Sendable, Equatable, ParsePrintable {
+public struct TrailingParameter: Sendable, Equatable {
     let value: String
-    
+}
+
+extension TrailingParameter: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.string.map(.memberwise(Self.init(value:)))) {
             Prefix(while: \.isTrailingParameter)

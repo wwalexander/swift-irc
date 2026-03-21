@@ -1,18 +1,14 @@
 import Parsing
 
-public struct Value: Sendable, Equatable, ParsePrintable {
+public struct Value: Sendable, Equatable {
     let escaped: String
-    
+}
+
+extension Value: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.string.map(.memberwise(Self.init(escaped:)))) {
             Prefix(while: \.isEscapedValue)
         }
-    }
-}
-
-extension Value: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
-    public init(stringLiteral value: String) {
-        self.init(value)!
     }
 }
 
@@ -36,6 +32,12 @@ extension Value: LosslessStringConvertible {
         "\r": #"\r"#,
         "\n": #"\n"#,
     ]
+}
+
+extension Value: ExpressibleByStringInterpolation {
+    public init(stringLiteral value: String) {
+        self.init(value)!
+    }
 }
 
 fileprivate extension Character {

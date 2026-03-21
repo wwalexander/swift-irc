@@ -1,10 +1,12 @@
 import Parsing
 
-public struct User: Sendable, Equatable, ParsePrintable {
-    let string: String
-    
+public struct User: Sendable, Equatable {
+    let value: String
+}
+
+extension User: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.string.map(.memberwise(Self.init(string:)))) {
+        Parse(.string.map(.memberwise(Self.init(value:)))) {
             Prefix(1..., while: \.isUser)
         }
     }
