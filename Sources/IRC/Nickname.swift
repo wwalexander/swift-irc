@@ -17,7 +17,7 @@ extension Nickname: ParsePrintable {
 
 extension Nickname: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }
 

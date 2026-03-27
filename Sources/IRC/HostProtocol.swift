@@ -1,20 +1,20 @@
 import Parsing
 
 protocol HostProtocol: ExpressibleByStringInterpolation, ParsePrintable {
-    var value: String { get }
-    init(value: String)
+    var rawValue: String { get }
+    init(rawValue: String)
     static var minimumNames: Int { get }
 }
 
 extension HostProtocol {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }
 
 extension HostProtocol {
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.string.map(.memberwise(Self.init(value:)))) {
+        Parse(.string.map(.memberwise(Self.init(rawValue:)))) {
             Consumed {
                 Many(minimumNames...) {
                     Prefix(1, while: \.isHostNameFirstOrLast)

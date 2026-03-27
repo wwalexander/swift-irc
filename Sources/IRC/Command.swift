@@ -1,3 +1,4 @@
+import Foundation
 import Parsing
 
 public enum Command: Sendable, Equatable {
@@ -15,12 +16,12 @@ extension Command: ParsePrintable {
 }
 
 public struct ClientCommand: Sendable {
-    let value: String
+    let rawValue: String
 }
 
 extension ClientCommand: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.string.map(.memberwise(Self.init(value:)))) {
+        Parse(.string.map(.memberwise(Self.init(rawValue:)))) {
             Prefix(1...) {
                 $0.isLetter
             }
@@ -30,13 +31,13 @@ extension ClientCommand: ParsePrintable {
 
 extension ClientCommand: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.value.caseInsensitiveCompare(rhs.value) == .orderedSame
+        lhs.rawValue.caseInsensitiveCompare(rhs.rawValue) == .orderedSame
     }
 }
 
 extension ClientCommand: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }
 
@@ -58,180 +59,185 @@ extension NumericCommand: ExpressibleByIntegerLiteral {
     }
 }
 
-extension Command {
-    public static let cap         : Command = .client("CAP")
-    public static let authenticate: Command = .client("AUTHENTICATE")
-    public static let pass        : Command = .client("PASS")
-    public static let nick        : Command = .client("NICK")
-    public static let user        : Command = .client("USER")
-    public static let ping        : Command = .client("PING")
-    public static let pong        : Command = .client("PONG")
-    public static let oper        : Command = .client("OPER")
-    public static let quit        : Command = .client("QUIT")
-    public static let error       : Command = .client("ERROR")
-    public static let join        : Command = .client("JOIN")
-    public static let part        : Command = .client("PART")
-    public static let topic       : Command = .client("TOPIC")
-    public static let names       : Command = .client("NAMES")
-    public static let list        : Command = .client("LIST")
-    public static let invite      : Command = .client("INVITE")
-    public static let kick        : Command = .client("KICK")
-    public static let motd        : Command = .client("MOTD")
-    public static let version     : Command = .client("VERSION")
-    public static let admin       : Command = .client("ADMIN")
-    public static let connect     : Command = .client("CONNECT")
-    public static let lUsers      : Command = .client("LUSERS")
-    public static let time        : Command = .client("TIME")
-    public static let stats       : Command = .client("STATS")
-    public static let help        : Command = .client("HELP")
-    public static let info        : Command = .client("INFO")
-    public static let mode        : Command = .client("MODE")
-    public static let privMsg     : Command = .client("PRIVMSG")
-    public static let notice      : Command = .client("NOTICE")
-    public static let who         : Command = .client("WHO")
-    public static let whoIs       : Command = .client("WHOIS")
-    public static let whoWas      : Command = .client("WHOWAS")
-    public static let kill        : Command = .client("KILL")
-    public static let rehash      : Command = .client("REHASH")
-    public static let restart     : Command = .client("RESTART")
-    public static let sQuit       : Command = .client("SQUIT")
-    public static let away        : Command = .client("AWAY")
-    public static let links       : Command = .client("LINKS")
-    public static let userHost    : Command = .client("USERHOST")
-    public static let wallops     : Command = .client("WALLOPS")
-    
-    public enum Replies {
-        public static let welcome          : Command = .numeric(001)
-        public static let yourHost         : Command = .numeric(002)
-        public static let created          : Command = .numeric(003)
-        public static let myInfo           : Command = .numeric(004)
-        public static let iSupport         : Command = .numeric(005)
-        public static let bounce           : Command = .numeric(010)
-        public static let statsCommands    : Command = .numeric(212)
-        public static let endOfStats       : Command = .numeric(219)
-        public static let uModeIs          : Command = .numeric(221)
-        public static let statsUptime      : Command = .numeric(242)
-        public static let lUserClient      : Command = .numeric(251)
-        public static let lUserOp          : Command = .numeric(252)
-        public static let lUserUnknown     : Command = .numeric(253)
-        public static let lUserChannels    : Command = .numeric(254)
-        public static let lUserMe          : Command = .numeric(255)
-        public static let lAdminMe         : Command = .numeric(256)
-        public static let adminLoc1        : Command = .numeric(257)
-        public static let adminLoc2        : Command = .numeric(258)
-        public static let adminEmail       : Command = .numeric(259)
-        public static let tryAgain         : Command = .numeric(263)
-        public static let localUsers       : Command = .numeric(265)
-        public static let globalUsers      : Command = .numeric(266)
-        public static let whoIsCertFP      : Command = .numeric(276)
-        public static let none             : Command = .numeric(300)
-        public static let away             : Command = .numeric(301)
-        public static let userHost         : Command = .numeric(302)
-        public static let unAway           : Command = .numeric(305)
-        public static let nowAway          : Command = .numeric(306)
-        public static let whoIsRegNick     : Command = .numeric(307)
-        public static let whoIsUser        : Command = .numeric(311)
-        public static let whoIsServer      : Command = .numeric(312)
-        public static let whoIsOperator    : Command = .numeric(313)
-        public static let whoWasUser       : Command = .numeric(314)
-        public static let endOfWho         : Command = .numeric(315)
-        public static let whoIsIdle        : Command = .numeric(317)
-        public static let endOfWhoIs       : Command = .numeric(318)
-        public static let whoIsChannels    : Command = .numeric(319)
-        public static let whoIsSpecial     : Command = .numeric(320)
-        public static let listStart        : Command = .numeric(321)
-        public static let list             : Command = .numeric(322)
-        public static let listEnd          : Command = .numeric(323)
-        public static let channelModeIs    : Command = .numeric(324)
-        public static let creationTime     : Command = .numeric(329)
-        public static let whoIsAccount     : Command = .numeric(330)
-        public static let noTopic          : Command = .numeric(331)
-        public static let topic            : Command = .numeric(332)
-        public static let topicWhoTime     : Command = .numeric(333)
-        public static let inviteList       : Command = .numeric(336)
-        public static let endOfInviteList  : Command = .numeric(337)
-        public static let whoIsActually    : Command = .numeric(338)
-        public static let inviting         : Command = .numeric(341)
-        public static let invExList        : Command = .numeric(346)
-        public static let endOfInvExList   : Command = .numeric(347)
-        public static let exceptList       : Command = .numeric(348)
-        public static let endOfExceptList  : Command = .numeric(349)
-        public static let version          : Command = .numeric(351)
-        public static let whoReply         : Command = .numeric(352)
-        public static let namReply         : Command = .numeric(353)
-        public static let links            : Command = .numeric(364)
-        public static let endOfLinks       : Command = .numeric(365)
-        public static let endOfNames       : Command = .numeric(366)
-        public static let banList          : Command = .numeric(367)
-        public static let endOfBanList     : Command = .numeric(368)
-        public static let endOfWhoWas      : Command = .numeric(369)
-        public static let info             : Command = .numeric(371)
-        public static let motd             : Command = .numeric(372)
-        public static let endOfInfo        : Command = .numeric(374)
-        public static let motdStart        : Command = .numeric(375)
-        public static let endOfMOTD        : Command = .numeric(376)
-        public static let whoIsHost        : Command = .numeric(378)
-        public static let whoIsModes       : Command = .numeric(379)
-        public static let youreOper        : Command = .numeric(381)
-        public static let rehashing        : Command = .numeric(382)
-        public static let time             : Command = .numeric(391)
-        public static let startTLS         : Command = .numeric(670)
-        public static let whoIsSecure      : Command = .numeric(671)
-        public static let helpStart        : Command = .numeric(704)
-        public static let helpTxt          : Command = .numeric(705)
-        public static let endOfHelp        : Command = .numeric(706)
-        public static let loggedIn         : Command = .numeric(900)
-        public static let loggedOut        : Command = .numeric(901)
-        public static let saslMechs        : Command = .numeric(908)
-    }
-
-    public enum Errors {
-        public static let unknownError     : Command = .numeric(400)
-        public static let noSuchNick       : Command = .numeric(401)
-        public static let noSuchServer     : Command = .numeric(402)
-        public static let noSuchChannel    : Command = .numeric(403)
-        public static let cannotSendToChan : Command = .numeric(404)
-        public static let tooManyChannels  : Command = .numeric(405)
-        public static let wasNoSuchNick    : Command = .numeric(406)
-        public static let noOrigin         : Command = .numeric(409)
-        public static let noRecipient      : Command = .numeric(411)
-        public static let noTextToSend     : Command = .numeric(412)
-        public static let inputTooLong     : Command = .numeric(417)
-        public static let unknownCommand   : Command = .numeric(421)
-        public static let noMOTD           : Command = .numeric(422)
-        public static let noNicknameGiven  : Command = .numeric(431)
-        public static let erroneousNickname: Command = .numeric(432)
-        public static let nicknameInUse    : Command = .numeric(433)
-        public static let nickCollision    : Command = .numeric(436)
-        public static let userNotInChannel : Command = .numeric(441)
-        public static let notOnChannel     : Command = .numeric(442)
-        public static let userOnChannel    : Command = .numeric(443)
-        public static let notRegistered    : Command = .numeric(451)
-        public static let needMoreParams   : Command = .numeric(461)
-        public static let alreadyRegistered: Command = .numeric(462)
-        public static let passwdMismatch   : Command = .numeric(464)
-        public static let youreBannedCreep : Command = .numeric(465)
-        public static let channelIsFull    : Command = .numeric(471)
-        public static let unknownMode      : Command = .numeric(472)
-        public static let inviteOnlyChan   : Command = .numeric(473)
-        public static let bannedFromChan   : Command = .numeric(474)
-        public static let badChannelKey    : Command = .numeric(475)
-        public static let badChanMask      : Command = .numeric(476)
-        public static let noPrivileges     : Command = .numeric(481)
-        public static let chanOPrivsNeeded : Command = .numeric(482)
-        public static let cantKillServer   : Command = .numeric(483)
-        public static let noOperHost       : Command = .numeric(491)
-        public static let uModeUnknownFlag : Command = .numeric(501)
-        public static let usersDontMatch   : Command = .numeric(502)
-        public static let helpNotFound     : Command = .numeric(524)
-        public static let invalidKey       : Command = .numeric(525)
-        public static let startTLS         : Command = .numeric(691)
-        public static let invalidModeParam : Command = .numeric(696)
-        public static let noPrivs          : Command = .numeric(723)
-        public static let nickLocked       : Command = .numeric(902)
-        public static let saslFail         : Command = .numeric(904)
-        public static let saslTooLong      : Command = .numeric(905)
-        public static let saslAborted      : Command = .numeric(906)
-        public static let saslAlready      : Command = .numeric(907)
-    }
+public struct NumericCommandError: Error {
+    public let numericCommand: NumericCommand
 }
+
+public extension ClientCommand {
+    static let cap         : Self = "CAP"
+    static let authenticate: Self = "AUTHENTICATE"
+    static let pass        : Self = "PASS"
+    static let nick        : Self = "NICK"
+    static let user        : Self = "USER"
+    static let ping        : Self = "PING"
+    static let pong        : Self = "PONG"
+    static let oper        : Self = "OPER"
+    static let quit        : Self = "QUIT"
+    static let error       : Self = "ERROR"
+    static let join        : Self = "JOIN"
+    static let part        : Self = "PART"
+    static let topic       : Self = "TOPIC"
+    static let names       : Self = "NAMES"
+    static let list        : Self = "LIST"
+    static let invite      : Self = "INVITE"
+    static let kick        : Self = "KICK"
+    static let motd        : Self = "MOTD"
+    static let version     : Self = "VERSION"
+    static let admin       : Self = "ADMIN"
+    static let connect     : Self = "CONNECT"
+    static let lUsers      : Self = "LUSERS"
+    static let time        : Self = "TIME"
+    static let stats       : Self = "STATS"
+    static let help        : Self = "HELP"
+    static let info        : Self = "INFO"
+    static let mode        : Self = "MODE"
+    static let privMsg     : Self = "PRIVMSG"
+    static let notice      : Self = "NOTICE"
+    static let who         : Self = "WHO"
+    static let whoIs       : Self = "WHOIS"
+    static let whoWas      : Self = "WHOWAS"
+    static let kill        : Self = "KILL"
+    static let rehash      : Self = "REHASH"
+    static let restart     : Self = "RESTART"
+    static let sQuit       : Self = "SQUIT"
+    static let away        : Self = "AWAY"
+    static let links       : Self = "LINKS"
+    static let userHost    : Self = "USERHOST"
+    static let wallops     : Self = "WALLOPS"
+}
+
+public extension NumericCommand {
+    static let welcome          : Self = 001
+    static let yourHost         : Self = 002
+    static let created          : Self = 003
+    static let myInfo           : Self = 004
+    static let iSupport         : Self = 005
+    static let bounce           : Self = 010
+    static let statsCommands    : Self = 212
+    static let endOfStats       : Self = 219
+    static let uModeIs          : Self = 221
+    static let statsUptime      : Self = 242
+    static let lUserClient      : Self = 251
+    static let lUserOp          : Self = 252
+    static let lUserUnknown     : Self = 253
+    static let lUserChannels    : Self = 254
+    static let lUserMe          : Self = 255
+    static let lAdminMe         : Self = 256
+    static let adminLoc1        : Self = 257
+    static let adminLoc2        : Self = 258
+    static let adminEmail       : Self = 259
+    static let tryAgain         : Self = 263
+    static let localUsers       : Self = 265
+    static let globalUsers      : Self = 266
+    static let whoIsCertFP      : Self = 276
+    static let none             : Self = 300
+    static let away             : Self = 301
+    static let userHost         : Self = 302
+    static let unAway           : Self = 305
+    static let nowAway          : Self = 306
+    static let whoIsRegNick     : Self = 307
+    static let whoIsUser        : Self = 311
+    static let whoIsServer      : Self = 312
+    static let whoIsOperator    : Self = 313
+    static let whoWasUser       : Self = 314
+    static let endOfWho         : Self = 315
+    static let whoIsIdle        : Self = 317
+    static let endOfWhoIs       : Self = 318
+    static let whoIsChannels    : Self = 319
+    static let whoIsSpecial     : Self = 320
+    static let listStart        : Self = 321
+    static let list             : Self = 322
+    static let listEnd          : Self = 323
+    static let channelModeIs    : Self = 324
+    static let creationTime     : Self = 329
+    static let whoIsAccount     : Self = 330
+    static let noTopic          : Self = 331
+    static let topic            : Self = 332
+    static let topicWhoTime     : Self = 333
+    static let inviteList       : Self = 336
+    static let endOfInviteList  : Self = 337
+    static let whoIsActually    : Self = 338
+    static let inviting         : Self = 341
+    static let invExList        : Self = 346
+    static let endOfInvExList   : Self = 347
+    static let exceptList       : Self = 348
+    static let endOfExceptList  : Self = 349
+    static let version          : Self = 351
+    static let whoReply         : Self = 352
+    static let namReply         : Self = 353
+    static let links            : Self = 364
+    static let endOfLinks       : Self = 365
+    static let endOfNames       : Self = 366
+    static let banList          : Self = 367
+    static let endOfBanList     : Self = 368
+    static let endOfWhoWas      : Self = 369
+    static let info             : Self = 371
+    static let motd             : Self = 372
+    static let endOfInfo        : Self = 374
+    static let motdStart        : Self = 375
+    static let endOfMOTD        : Self = 376
+    static let whoIsHost        : Self = 378
+    static let whoIsModes       : Self = 379
+    static let youreOper        : Self = 381
+    static let rehashing        : Self = 382
+    static let time             : Self = 391
+    static let startTLS         : Self = 670
+    static let whoIsSecure      : Self = 671
+    static let helpStart        : Self = 704
+    static let helpTxt          : Self = 705
+    static let endOfHelp        : Self = 706
+    static let loggedIn         : Self = 900
+    static let loggedOut        : Self = 901
+    static let saslMechs        : Self = 908
+}
+
+public extension NumericCommand {
+    static let unknownError     : Self = 400
+    static let noSuchNick       : Self = 401
+    static let noSuchServer     : Self = 402
+    static let noSuchChannel    : Self = 403
+    static let cannotSendToChan : Self = 404
+    static let tooManyChannels  : Self = 405
+    static let wasNoSuchNick    : Self = 406
+    static let noOrigin         : Self = 409
+    static let noRecipient      : Self = 411
+    static let noTextToSend     : Self = 412
+    static let inputTooLong     : Self = 417
+    static let unknownCommand   : Self = 421
+    static let noMOTD           : Self = 422
+    static let noNicknameGiven  : Self = 431
+    static let erroneousNickname: Self = 432
+    static let nicknameInUse    : Self = 433
+    static let nickCollision    : Self = 436
+    static let userNotInChannel : Self = 441
+    static let notOnChannel     : Self = 442
+    static let userOnChannel    : Self = 443
+    static let notRegistered    : Self = 451
+    static let needMoreParams   : Self = 461
+    static let alreadyRegistered: Self = 462
+    static let passwdMismatch   : Self = 464
+    static let youreBannedCreep : Self = 465
+    static let channelIsFull    : Self = 471
+    static let unknownMode      : Self = 472
+    static let inviteOnlyChan   : Self = 473
+    static let bannedFromChan   : Self = 474
+    static let badChannelKey    : Self = 475
+    static let badChanMask      : Self = 476
+    static let noPrivileges     : Self = 481
+    static let chanOPrivsNeeded : Self = 482
+    static let cantKillServer   : Self = 483
+    static let noOperHost       : Self = 491
+    static let uModeUnknownFlag : Self = 501
+    static let usersDontMatch   : Self = 502
+    static let helpNotFound     : Self = 524
+    static let invalidKey       : Self = 525
+    static let startTLSFailed   : Self = 691
+    static let invalidModeParam : Self = 696
+    static let noPrivs          : Self = 723
+    static let nickLocked       : Self = 902
+    static let saslFail         : Self = 904
+    static let saslTooLong      : Self = 905
+    static let saslAborted      : Self = 906
+    static let saslAlready      : Self = 907
+}
+

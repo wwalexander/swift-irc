@@ -5,10 +5,8 @@ import Testing
     let connection = Connection(host: "irc.libera.chat")
     try await connection.start()
     try await connection.register(nickname: "wwalexander", userName: "wwalexander", realName: "William Alexander")
-    try await connection.send(.init(.join, .init("#lobsters")))
     try await Task.sleep(for: .seconds(10))
 }
-
 
 @Suite struct ParsingTests {
     @Test(arguments: zip([
@@ -41,36 +39,36 @@ import Testing
     ], [
         Message(
             source: .server("irc.example.com"),
-            .cap, .init("LS", "*", trailing: "multi-prefix extended-join sasl")
+            .client(.cap), .init("LS", "*", trailing: "multi-prefix extended-join sasl")
         ),
         Message(
             tags: ["id": "234AB"],
             source: .client("dan", user: "d", host: "localhost"),
-            .privMsg, .init("#chan", trailing: "Hey what's up!")
+            .client(.privMsg), .init("#chan", trailing: "Hey what's up!")
         ),
-        Message(.cap, .init("REQ", trailing: "sasl")),
+        Message(.client(.cap), .init("REQ", trailing: "sasl")),
         Message(
             source: .server("irc.example.com"),
-            .cap, .init("*", "LIST", trailing: "")
+            .client(.cap), .init("*", "LIST", trailing: "")
         ),
-        Message(.cap, .init("*", "LS", trailing: "multi-prefix sasl")),
-        Message(.cap, .init("REQ", trailing: "sasl message-tags foo")
-        ),
-        Message(
-            source: .client("dan", user: "d", host: "localhost"),
-            .privMsg, .init("#chan", trailing: "Hey!")
+        Message(.client(.cap), .init("*", "LS", trailing: "multi-prefix sasl")),
+        Message(.client(.cap), .init("REQ", trailing: "sasl message-tags foo")
         ),
         Message(
             source: .client("dan", user: "d", host: "localhost"),
-            .privMsg, .init("#chan", "Hey!")
+            .client(.privMsg), .init("#chan", trailing: "Hey!")
         ),
         Message(
             source: .client("dan", user: "d", host: "localhost"),
-            .privMsg, .init("#chan", trailing: ":-)"),
+            .client(.privMsg), .init("#chan", "Hey!")
+        ),
+        Message(
+            source: .client("dan", user: "d", host: "localhost"),
+            .client(.privMsg), .init("#chan", trailing: ":-)"),
         ),
         Message(
             source: .client("nick", user: "ident", host: "host.com"),
-            .privMsg, .init("me", trailing: "Hello"),
+            .client(.privMsg), .init("me", trailing: "Hello"),
         ),
         Message(
             tags: [
@@ -79,15 +77,15 @@ import Testing
                 .init(vendor: .init(host: "example.com"), "ddd"): "eee"
             ],
             source: .client("nick", user: "ident", host: "host.com"),
-            .privMsg, .init("me", trailing: "Hello"),
+            .client(.privMsg), .init("me", trailing: "Hello"),
         ),
         Message(
             tags: ["example-tag": "example-value"],
-            .privMsg, .init("#channel", trailing: "Message"),
+            .client(.privMsg), .init("#channel", trailing: "Message"),
         ),
         Message(
             tags: [.init(isClientOnly: true, "example-client-tag"): "example-value"],
-            .privMsg, .init("#channel", trailing: "Message"),
+            .client(.privMsg), .init("#channel", trailing: "Message"),
         ),
         Message(
             source: .client(
@@ -95,7 +93,7 @@ import Testing
                 user: "user",
                 host: "example.com"
             ),
-            .privMsg, .init("#channel", trailing: "https://example.com/a-news-story")
+            .client(.privMsg), .init("#channel", trailing: "https://example.com/a-news-story")
         ),
         Message(
             tags: [.init(isClientOnly: true, "icon"): "https://example.com/favicon.png"],
@@ -104,17 +102,17 @@ import Testing
                 user: "bot",
                 host: "example.com"
             ),
-            .privMsg, .init("#channel", trailing: "Example.com: A News Story")
+            .client(.privMsg), .init("#channel", trailing: "Example.com: A News Story")
         ),
         Message(
             tags: [.init(isClientOnly: true, vendor: .init(host: "example.com"), "foo"): "bar"],
             source: .server("irc.example.com"),
-            .notice, .init("#channel", trailing: "A vendor-prefixed client-only tagged message")
+            .client(.notice), .init("#channel", trailing: "A vendor-prefixed client-only tagged message")
         ),
         Message(
             tags: [.init(isClientOnly: true, "example"): #"raw+:=,escaped; \"#],
             source: .server("irc.example.com"),
-            .notice, .init("#channel", trailing: "Message")
+            .client(.notice), .init("#channel", trailing: "Message")
         ),
         Message(
             tags: [.init(isClientOnly: true, "example-client-tag"): "example-value"],
@@ -158,7 +156,7 @@ import Testing
         ),
         Message(
             source: .server("server.example.com"),
-            Command.Errors.inputTooLong,
+            Command.numeric(.inputTooLong),
             .init("nick", trailing: "Input line was too long")
         ),
         Message(
@@ -193,14 +191,14 @@ import Testing
         "draft/foo",
         "draft/foo-0.2",
     ], [
-        "foo" as Key,
-        Key(vendor: .init(host: "example"), "bar"),
-        Key(vendor: .init(host: "znc.in"), "server-time"),
-        Key(vendor: .init(host: "xn--e1afmkfd.org"), "foo"),
-        Key(vendor: .init(host: "draft"), "foo"),
-        Key(vendor: .init(host: "draft"), "foo-0.2"),
-    ])) func testKey(input: Substring, output: Key) throws {
-        #expect(try Key(parsing: input) == output)
+        "foo" as TagKey,
+        TagKey(vendor: .init(host: "example"), "bar"),
+        TagKey(vendor: .init(host: "znc.in"), "server-time"),
+        TagKey(vendor: .init(host: "xn--e1afmkfd.org"), "foo"),
+        TagKey(vendor: .init(host: "draft"), "foo"),
+        TagKey(vendor: .init(host: "draft"), "foo-0.2"),
+    ])) func testKey(input: Substring, output: TagKey) throws {
+        #expect(try TagKey(parsing: input) == output)
         #expect(try output.printed == input)
     }
     
@@ -216,9 +214,9 @@ import Testing
     @Test(arguments: zip([
         #"raw+:=,escaped\:\s\\"#
     ], [
-        #"raw+:=,escaped; \"# as Value
-    ])) func testValue(input: Substring, output: Value) throws {
-        #expect(try Value(parsing: input) == output)
+        #"raw+:=,escaped; \"# as TagValue
+    ])) func testValue(input: Substring, output: TagValue) throws {
+        #expect(try TagValue(parsing: input) == output)
         #expect(try output.printed == input)
     }
 }

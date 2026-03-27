@@ -4,13 +4,41 @@ public struct Parameters: Sendable, Equatable {
     public var middle: [MiddleParameter]
     public var trailing: TrailingParameter?
     
-    public init(middle: [MiddleParameter], trailing: TrailingParameter? = nil) {
+    public init(middle: [MiddleParameter], trailing: TrailingParameter?) {
         self.middle = middle
         self.trailing = trailing
     }
     
     public init(_ middle: MiddleParameter..., trailing: TrailingParameter? = nil) {
         self.init(middle: middle, trailing: trailing)
+    }
+}
+
+extension Parameters: RandomAccessCollection {
+    public typealias Index = [MiddleParameter].Index
+    
+    public var startIndex: Index {
+        middle.startIndex
+    }
+    
+    public var endIndex: Index {
+        middle.endIndex.advanced(by: 1)
+    }
+    
+    public func index(after i: Index) -> Index {
+        middle.index(after: i)
+    }
+    
+    public func index(before i: Index) -> Index {
+        middle.index(before: i)
+    }
+    
+    public subscript(position: Index) -> String {
+        if middle.indices.contains(position) {
+            .init(try! middle[position].printed)
+        } else {
+            .init(try! trailing!.printed)
+        }
     }
 }
 
@@ -46,7 +74,7 @@ extension MiddleParameter: ParsePrintable {
 
 extension MiddleParameter: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }
 
@@ -64,7 +92,7 @@ extension TrailingParameter: ParsePrintable {
 
 extension TrailingParameter: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }
 

@@ -1,20 +1,20 @@
 import Parsing
 
 public struct Tag: Sendable, Equatable, ParsePrintable {
-    public var key: Key
-    public var value: Value?
+    public var key: TagKey
+    public var value: TagValue?
     
-    public init(key: Key, value: Value? = nil) {
+    public init(key: TagKey, value: TagValue? = nil) {
         self.key = key
         self.value = value
     }
     
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.memberwise(Self.init)) {
-            Key.parser
+            TagKey.parser
             Optionally {
                 "="
-                Value.parser
+                TagValue.parser
             }
         }
     }

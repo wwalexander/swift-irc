@@ -1,6 +1,7 @@
 import Parsing
 
-public struct Key: Sendable, Equatable {
+// TODO: Rename to TagKey
+public struct TagKey: Sendable, Equatable {
     public var isClientOnly: Bool
     public var vendor: Vendor?
     public var name: KeyName
@@ -16,9 +17,9 @@ public struct Key: Sendable, Equatable {
     }
 }
 
-extension Key: ParsePrintable {
+extension TagKey: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.memberwise(Self.init)) {
+        Parse(.memberwise(Self.init(isClientOnly:vendor:_:))) {
             "+".map { true }.replaceError(with: false)
             Optionally {
                 Vendor.parser
@@ -29,7 +30,7 @@ extension Key: ParsePrintable {
     }
 }
 
-extension Key: ExpressibleByStringLiteral {
+extension TagKey: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         self.init(isClientOnly: false, .init(stringLiteral: value))
     }

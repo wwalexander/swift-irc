@@ -1,56 +1,35 @@
 import Parsing
 
-public struct Capability: Sendable, Equatable {
-    public var vendor: Vendor?
-    public var name: CapabilityName
+public struct Capability: Sendable, Equatable, Hashable {
+    public let key: CapabilityKey
+    public let value: CapabilityValue?
     
-    public init(vendor: Vendor? = nil, name: CapabilityName) {
-        self.vendor = vendor
-        self.name = name
+    public init(_ key: CapabilityKey, _ value: CapabilityValue? = nil) {
+        self.key = key
+        self.value = value
     }
 }
 
 extension Capability: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.memberwise(Self.init(vendor:name:))) {
+        Parse(.memberwise(Self.init(_:_:))) {
+            CapabilityKey.parser
             Optionally {
-                Vendor.parser
-                "/"
-            }
-            CapabilityName.parser
-        }
-    }
-}
-
-public struct CapabilityName: Sendable {
-    let value: String
-}
-
-extension CapabilityName: ParsePrintable {
-    public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.string.map(.memberwise(Self.init(value:)))) {
-            Consumed {
-                Prefix(1, while: \.isCapabilityNameFirst)
-                Prefix(0...)
+                "="
+                CapabilityValue.parser
             }
         }
     }
 }
 
-extension CapabilityName: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.value.caseInsensitiveCompare(rhs.value) == .orderedSame
-    }
-}
-
-extension CapabilityName: ExpressibleByStringInterpolation {
+extension Capability: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        self.init(.init(stringLiteral: value))
     }
 }
 
-fileprivate extension Character {
-    var isCapabilityNameFirst: Bool {
-        self != "-"
-    }
+/// https://ircv3.net/registry#capabilities
+public extension Capability {
+    static let accountNotify: Self = "account-notify"
+    // TODO: Remaining capabilities
 }

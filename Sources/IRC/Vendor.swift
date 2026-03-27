@@ -1,6 +1,6 @@
 import Parsing
 
-public struct Vendor: Sendable, Equatable {
+public struct Vendor: Sendable, Equatable, Hashable {
     public var host: Host
     
     public init(host: Host) {

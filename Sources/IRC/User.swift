@@ -1,12 +1,12 @@
 import Parsing
 
 public struct User: Sendable, Equatable {
-    let value: String
+    public let rawValue: String
 }
 
 extension User: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
-        Parse(.string.map(.memberwise(Self.init(value:)))) {
+        Parse(.string.map(.memberwise(Self.init(rawValue:)))) {
             Prefix(1..., while: \.isUser)
         }
     }
@@ -14,7 +14,7 @@ extension User: ParsePrintable {
 
 extension User: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }
 

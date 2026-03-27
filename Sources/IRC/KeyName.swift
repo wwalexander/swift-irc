@@ -20,6 +20,6 @@ fileprivate extension Character {
 
 extension KeyName: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
-        try! self.init(parsing: value[...])
+        try! self.init(parsing: value)
     }
 }

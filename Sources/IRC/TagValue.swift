@@ -1,10 +1,10 @@
 import Parsing
 
-public struct Value: Sendable, Equatable {
-    let escaped: String
+public struct TagValue: Sendable, Equatable {
+    public let escaped: String
 }
 
-extension Value: ParsePrintable {
+extension TagValue: ParsePrintable {
     public static var parser: some ParserPrinter<Substring, Self> {
         Parse(.string.map(.memberwise(Self.init(escaped:)))) {
             Prefix(while: \.isEscapedValue)
@@ -12,7 +12,7 @@ extension Value: ParsePrintable {
     }
 }
 
-extension Value: LosslessStringConvertible {
+extension TagValue: LosslessStringConvertible {
     public init?(_ description: String) {
         try! self.init(parsing: Self.replacements.reduce(into: description[...]) { partialResult, replacement in
             partialResult.replace(replacement.key, with: replacement.value)
@@ -34,7 +34,7 @@ extension Value: LosslessStringConvertible {
     ]
 }
 
-extension Value: ExpressibleByStringInterpolation {
+extension TagValue: ExpressibleByStringInterpolation {
     public init(stringLiteral value: String) {
         self.init(value)!
     }

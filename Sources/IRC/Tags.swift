@@ -34,7 +34,7 @@ extension Tags: ExpressibleByArrayLiteral {
 }
 
 extension Tags: ExpressibleByDictionaryLiteral {
-    public init(dictionaryLiteral elements: (Key, Value?)...) {
+    public init(dictionaryLiteral elements: (TagKey, TagValue?)...) {
         self.init(rawValue: .init(elements.map(Tag.init))!)
     }
 }

@@ -6,11 +6,12 @@ public protocol ParsePrintable {
 }
 
 extension ParsePrintable {
-    public init(parsing input: Substring) throws {
+    public init<C>(parsing input: C) throws
+    where C : Collection, Parser.Input == C.SubSequence {
         self = try Self.parser.parse(input)
     }
     
-    var printed: Substring {
+    public var printed: Parser.Input {
         get throws {
             try Self.parser.print(self)
         }

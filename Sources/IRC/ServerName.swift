@@ -1,5 +1,5 @@
-public struct ServerName: Sendable, Equatable {
-    let value: String
+public struct ServerName: Sendable, Equatable, Hashable {
+    let rawValue: String
 }
 
 extension ServerName: HostProtocol {
