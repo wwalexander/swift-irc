@@ -39,11 +39,11 @@ let package = Package(
     targets: [
         .target(
             name: "IRC",
+        ),
+        .target(
+            name: "IRCMessaging",
             dependencies: [
-                .product(
-                    name: "AsyncAlgorithms",
-                    package: "swift-async-algorithms"
-                ),
+                "IRC",
                 .product(
                     name: "Parsing",
                     package: "swift-parsing"
@@ -51,6 +51,16 @@ let package = Package(
                 .product(
                     name: "NonEmpty",
                     package: "swift-nonempty"
+                ),
+            ]
+        ),
+        .target(
+            name: "IRCConnectivity",
+            dependencies: [
+                "IRCMessaging",
+                .product(
+                    name: "AsyncAlgorithms",
+                    package: "swift-async-algorithms"
                 ),
             ]
         ),
@@ -64,8 +74,12 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "IRCTests",
-            dependencies: ["IRC"]
+            name: "IRCConnectivityTests",
+            dependencies: ["IRCConnectivity"]
+        ),
+        .testTarget(
+            name: "IRCMessagingTests",
+            dependencies: ["IRCMessaging"]
         ),
         .testTarget(
             name: "IRCFormattingTests",
